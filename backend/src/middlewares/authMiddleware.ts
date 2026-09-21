@@ -1,25 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-export interface AuthRequest extends Request {
-  user?: any;
-}
-
-export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const verifyToken = (req: Request, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    res.status(401).json({ message: 'Akses ditolak, token tidak ditemukan' });
+    res.status(401).json({ success: false, message: 'Akses ditolak. Token tidak ditemukan!' });
     return;
   }
 
   try {
     const secretKey = process.env.JWT_SECRET || 'pwf_2026';
-    const decoded = jwt.verify(token, secretKey);
-    req.user = decoded;
+    const decoded: any = jwt.verify(token, secretKey);
+
+    // Simpan userId ke res.locals agar dibaca oleh todoController
+    res.locals.userId = decoded.id;
+
     next();
   } catch (error) {
-    res.status(403).json({ message: 'Token tidak valid' });
+    res.status(403).json({ success: false, message: 'Token tidak valid!' });
   }
 };
